@@ -1,5 +1,6 @@
 import Product from "../models/product.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import { redis } from "../lib/redis.js";
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -207,7 +208,13 @@ async function updateFeaturedProductsCache() {
     // The lean() method  is used to return plain JavaScript objects instead of full Mongoose documents. This can significantly improve performance
 
     const featuredProducts = await Product.find({ isFeatured: true }).lean();
-    await redis.set("featured_products", JSON.stringify(featuredProducts)); //  JSON.stringify=converts a JavaScript object into a JSON string.
+    await redis.set(
+      "featured_products",
+      JSON.stringify(featuredProducts),
+      "EX",
+      60 * 60
+    );
+    //  JSON.stringify=converts a JavaScript object into a JSON string.
   } catch (error) {
     console.log("error in update cache function");
   }
